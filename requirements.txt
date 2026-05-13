@@ -1,24 +1,3 @@
-# =====================================================================
-# SmartGuard AI — CLOUD DEMO requirements (lightweight)
-# =====================================================================
-#
-# This file is used ONLY by the cloud-demo branch and is optimised for
-# free hosting tiers (Hugging Face Spaces, Streamlit Community Cloud).
-#
-# It intentionally DOES NOT include:
-#   - tensorflow / tensorflow-macos / tensorflow-metal / keras
-#   - langchain / langchain-google-genai / google-generativeai
-#   - google-search-results (SerpAPI)
-#   - paho-mqtt (MQTT runtime)
-#   - matplotlib / seaborn / scikit-learn (training-time deps)
-#
-# Full local stack lives in `requirements-local.txt` (preserved).
-# See README.md for the local-vs-cloud execution contract.
-#
-# Install:  pip install -r requirements.txt
-# Run:      streamlit run app.py
-# =====================================================================
-
 streamlit==1.39.0
 pandas==2.2.2
 numpy==1.26.4

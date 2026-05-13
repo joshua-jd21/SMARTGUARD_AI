@@ -3,9 +3,8 @@ title: SmartGuard AI
 emoji: 🩺
 colorFrom: indigo
 colorTo: blue
-sdk: streamlit
-sdk_version: 1.39.0
-app_file: app.py
+sdk: docker
+app_port: 7860
 pinned: false
 license: mit
 short_description: AI-assisted health risk + insurance intelligence (cloud demo)
@@ -45,16 +44,39 @@ continues to run the full pipeline as documented below.
 
 The `cloud-demo` branch is purpose-built for free hosting tiers.
 
-### Hugging Face Spaces
+### Hugging Face Spaces (Docker SDK)
 
-1. Create a new Space → **SDK: Streamlit**.
-2. Push or link this branch as the Space repo.
+1. Create a new Space → **SDK: Docker**.
+2. Push or link this branch as the Space repo. The remote is conventionally:
+   ```bash
+   git remote add hf https://huggingface.co/spaces/<user>/<space-name>
+   git push hf cloud-demo:main
+   ```
 3. The YAML front-matter at the top of this README already configures Spaces:
-   - `sdk: streamlit`
-   - `sdk_version: 1.39.0`
-   - `app_file: app.py`
-4. No secrets, no environment variables required — the demo runs end-to-end on
+   - `sdk: docker`
+   - `app_port: 7860`
+4. HF Spaces builds the included `Dockerfile`, which:
+   - Uses `python:3.10-slim` (small base image, fast cold start).
+   - Installs only the 5 cloud requirements.
+   - Copies the repo (minus everything excluded by `.dockerignore` — i.e. local
+     heavy modules like `agents/`, `deep_learning/`, `iot/`, `models/`,
+     `dashboard/`, `scripts/`, `main.py`).
+   - Starts Streamlit on `0.0.0.0:7860`.
+5. No secrets, no environment variables required — the demo runs end-to-end on
    the bundled `demo/` assets.
+
+### Local Docker build
+
+```bash
+docker build -t smartguard-ai:cloud-demo .
+docker run --rm -p 7860:7860 smartguard-ai:cloud-demo
+# open http://localhost:7860
+```
+
+The built image contains **only** the cloud presentation layer — the local
+edge stack (`agents/`, `deep_learning/`, `iot/`, etc.) is excluded by
+`.dockerignore` so production images stay small and free of dual-use
+PHI-handling code paths.
 
 ### Streamlit Community Cloud
 
