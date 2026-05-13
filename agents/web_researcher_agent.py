@@ -607,6 +607,17 @@ class WebResearcherAgent:
 
                 llm_succeeded = True
 
+                # Log token usage if available
+                usage = getattr(response, "response_metadata", {}).get(
+                    "usage_metadata", {}
+                )
+                if usage:
+                    logger.debug(
+                        f"WebResearcherAgent tokens: "
+                        f"input={usage.get('prompt_token_count', '?')} "
+                        f"output={usage.get('candidates_token_count', '?')}"
+                    )
+
                 logger.debug(
                     f"LLM synthesis success "
                     f"(attempt {attempt})"

@@ -1,0 +1,7 @@
+{
+  "include": ["agents", "config", "dashboard", "deep_learning", "iot"],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.10",
+  "extraPaths": ["."]
+}

@@ -46,7 +46,7 @@ RAW_DATA_DIR    = DATA_RAW_DIR
 #  SECTION 2 — API KEYS
 # =============================================================
 
-GOOGLE_API_KEY    = os.getenv("GOOGLE_API_KEY", "")
+GOOGLE_API_KEY    = os.getenv("GOOGLE_API_KEY", "") or os.getenv("GEMINI_API_KEY", "")
 SERPAPI_API_KEY   = os.getenv("SERPAPI_API_KEY", "")
 OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
@@ -69,8 +69,20 @@ if not ANTHROPIC_API_KEY:
 # =============================================================
 
 # PRIMARY LLM: Gemini (used by all 3 agents)
-# This is the ONLY model string passed to ChatGoogleGenerativeAI
-GEMINI_MODEL    = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+# Default: gemini-2.5-flash — gemini-2.0-flash often hits free-tier quota limit: 0 on new keys/projects.
+# Avoid bare "gemini-1.5-flash" (404 on many keys); prefer ids from AI Studio → Rate limits for your tier.
+# Override in .env, e.g. GEMINI_MODEL=gemini-2.5-flash-lite
+_DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+
+
+def _normalize_gemini_model(raw: str) -> str:
+    name = (raw or "").strip()
+    if name.startswith("models/"):
+        name = name[7:]
+    return name or _DEFAULT_GEMINI_MODEL
+
+
+GEMINI_MODEL = _normalize_gemini_model(os.getenv("GEMINI_MODEL", _DEFAULT_GEMINI_MODEL))
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.3"))
 
 # Legacy alias — kept for backward compatibility but NOT passed to Gemini
@@ -88,8 +100,8 @@ MAX_RESULT_CHARS = 2500
 #  SECTION 4 — MQTT CONFIGURATION
 # =============================================================
 
-MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "broker.hivemq.com")
-MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
+MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "") or os.getenv("MQTT_BROKER", "broker.hivemq.com")
+MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "") or os.getenv("MQTT_PORT", "1883"))
 MQTT_USERNAME    = os.getenv("MQTT_USERNAME", "")
 MQTT_PASSWORD    = os.getenv("MQTT_PASSWORD", "")
 MQTT_CLIENT_ID   = "smartguard_subscriber"
@@ -97,7 +109,7 @@ MQTT_CLIENT_ID   = "smartguard_subscriber"
 MQTT_BROKER = MQTT_BROKER_HOST
 MQTT_PORT   = MQTT_BROKER_PORT
 
-MQTT_TOPIC         = "smartguard/patient/vitals"
+MQTT_TOPIC         = os.getenv("MQTT_TOPIC", "smartguard/patient/vitals")
 MQTT_TOPIC_SENSORS = MQTT_TOPIC
 MQTT_TOPIC_RISK    = "smartguard/risk_alert"
 MQTT_TOPIC_REPORT  = "smartguard/insurance_report"

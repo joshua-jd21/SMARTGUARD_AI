@@ -30,6 +30,7 @@
 # ✅ JSON serialisation support
 # =============================================================
 
+import hashlib
 import json
 import sys
 import time
@@ -37,9 +38,27 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from loguru import logger
+
+# ============================================================
+# QUOTA PROTECTION — in-memory response cache + rate limiter
+# ============================================================
+
+_response_cache: Dict[str, Tuple] = {}
+
+# Cache entries expire after this many seconds
+CACHE_TTL_SECONDS = 300  # 5 minutes
+
+# Minimum wall-clock gap between pipeline runs (per instance)
+MIN_RUN_INTERVAL_SECONDS = 10
+
+
+def _cache_key(prediction: Dict) -> str:
+    """Stable hash of the prediction payload for cache lookups."""
+    serialised = json.dumps(prediction, sort_keys=True, default=str)
+    return hashlib.sha256(serialised.encode()).hexdigest()
 
 # =============================================================
 # PROJECT ROOT
@@ -180,6 +199,9 @@ class SmartGuardPipeline:
             "All agents initialised successfully."
         )
 
+        # Rate-limiter state — tracks last run time per instance
+        self._last_run_time: float = 0.0
+
     # =========================================================
     # VALIDATION
     # =========================================================
@@ -247,9 +269,9 @@ class SmartGuardPipeline:
             "CRITICAL",
         }
 
-        risk_label = prediction[
-            "risk_prediction"
-        ]["risk_label"]
+        risk_label = str(
+            prediction["risk_prediction"]["risk_label"]
+        ).strip().upper()
 
         if risk_label not in valid_risks:
 
@@ -294,6 +316,38 @@ class SmartGuardPipeline:
         logger.info("=" * 60)
         logger.info(" SMARTGUARD AI PIPELINE STARTED")
         logger.info("=" * 60)
+
+        # =====================================================
+        # CACHE CHECK — return early on duplicate input
+        # =====================================================
+
+        key = _cache_key(prediction)
+        now = time.time()
+        if key in _response_cache:
+            cached_result, cached_at = _response_cache[key]
+            age = now - cached_at
+            if age < CACHE_TTL_SECONDS:
+                logger.info(
+                    f"Cache hit — returning cached result "
+                    f"(age={age:.0f}s, ttl={CACHE_TTL_SECONDS}s)"
+                )
+                return cached_result
+            else:
+                del _response_cache[key]
+
+        # =====================================================
+        # RATE LIMITER — enforce minimum run interval
+        # =====================================================
+
+        since_last = now - self._last_run_time
+        if since_last < MIN_RUN_INTERVAL_SECONDS:
+            wait = MIN_RUN_INTERVAL_SECONDS - since_last
+            logger.info(
+                f"Rate limit: waiting {wait:.1f}s before next run"
+            )
+            time.sleep(wait)
+
+        self._last_run_time = time.time()
 
         risk_context = None
         research_result = None
@@ -410,7 +464,7 @@ class SmartGuardPipeline:
 
             logger.success("=" * 60)
 
-            return PipelineResult(
+            pipeline_result = PipelineResult(
 
                 risk_context=risk_context,
 
@@ -428,6 +482,11 @@ class SmartGuardPipeline:
                     timezone.utc
                 ).isoformat(),
             )
+
+            # Store in cache for deduplication
+            _response_cache[key] = (pipeline_result, time.time())
+
+            return pipeline_result
 
         except Exception as e:
 

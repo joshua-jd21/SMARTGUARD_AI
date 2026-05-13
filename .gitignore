@@ -11,9 +11,12 @@ venv/
 
 # macOS
 .DS_Store
+# AppleDouble resource forks (not source; created on some copies / foreign volumes)
+._*
 
 # Logs
 *.log
+smartguard.log
 
 # Streamlit
 .streamlit/

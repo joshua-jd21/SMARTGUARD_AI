@@ -7,37 +7,39 @@
 #  published by the publisher. Stores readings in memory
 #  and writes them to a CSV file for the DL module to use.
 #
-#  Think of this as the "cloud receiver" — in production
-#  this would run on a server, not the patient's device.
-#
 #  Run this in a SEPARATE terminal from the publisher.
+#
+#  IMPROVEMENTS:
+#  ✅ Thread-safe readings_count with Lock
+#  ✅ Batched CSV writes (flush every 10 messages)
+#     — avoids per-message file I/O overhead
 # =============================================================
 
-import json
 import csv
+import json
 import os
 import sys
-import time
-from datetime import datetime
+import threading
 from collections import deque
+from datetime import datetime
+
 import paho.mqtt.client as mqtt
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.settings import (
-    MQTT_BROKER, MQTT_PORT, MQTT_TOPIC, MQTT_CLIENT_ID,
-    ANOMALY_THRESHOLD, PROCESSED_DATA_DIR
+    MQTT_BROKER,
+    MQTT_CLIENT_ID,
+    MQTT_PORT,
+    MQTT_TOPIC,
+    PROCESSED_DATA_DIR,
 )
 
 
 # ──────────────────────────────────────────────────────────────
 #  STORAGE SETUP
-#  We store received readings in two places:
-#  1. In-memory deque  → fast access for the DL pipeline
-#  2. CSV file         → persistent storage for training data
 # ──────────────────────────────────────────────────────────────
 
 # In-memory buffer: stores the last 200 readings
-# deque with maxlen automatically drops oldest when full
 readings_buffer = deque(maxlen=200)
 
 # CSV file path for persistent storage
@@ -50,37 +52,60 @@ CSV_HEADERS = [
     "heart_rate", "spo2", "temperature", "activity", "is_anomaly"
 ]
 
-# Track total readings received
+# ──────────────────────────────────────────────────────────────
+#  THREAD-SAFE COUNTER
+# ──────────────────────────────────────────────────────────────
+
 readings_count = 0
-
+_counter_lock = threading.Lock()
 
 # ──────────────────────────────────────────────────────────────
-#  CSV WRITER
-#  Appends one reading to the CSV file.
-#  Creates the file with headers if it doesn't exist yet.
+#  BATCHED CSV WRITER
+#  Accumulates readings and flushes every _FLUSH_INTERVAL msgs.
+#  Reduces file I/O from N writes → N/10 writes.
 # ──────────────────────────────────────────────────────────────
 
-def write_to_csv(reading):
-    """Append a reading dictionary to the CSV file."""
-    file_exists = os.path.isfile(CSV_FILE)
+_CSV_FLUSH_INTERVAL = 10
+_write_buffer: list = []
+_write_lock = threading.Lock()
 
-    with open(CSV_FILE, mode="a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
 
-        # Write header row only when creating the file fresh
-        if not file_exists:
-            writer.writeheader()
+def _flush_csv():
+    """Write accumulated readings to CSV and clear the buffer."""
+    global _write_buffer
+    with _write_lock:
+        if not _write_buffer:
+            return
+        file_exists = os.path.isfile(CSV_FILE)
+        try:
+            with open(CSV_FILE, mode="a", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
+                if not file_exists:
+                    writer.writeheader()
+                for reading in _write_buffer:
+                    row = {
+                        key: reading[key]
+                        for key in CSV_HEADERS
+                        if key in reading
+                    }
+                    writer.writerow(row)
+        except OSError as e:
+            print(f"[MQTT Subscriber] ❌ CSV write error: {e}")
+        _write_buffer = []
 
-        # Write only the columns we care about (ignore extra keys)
-        row = {key: reading[key] for key in CSV_HEADERS if key in reading}
-        writer.writerow(row)
+
+def queue_csv_write(reading):
+    """Add reading to write buffer; flush when batch is full."""
+    with _write_lock:
+        _write_buffer.append(reading)
+        should_flush = len(_write_buffer) >= _CSV_FLUSH_INTERVAL
+
+    if should_flush:
+        _flush_csv()
 
 
 # ──────────────────────────────────────────────────────────────
 #  ALERT HANDLER
-#  Called whenever an anomaly reading is received.
-#  In production this would trigger a notification to the
-#  insurance system or a clinical alert.
 # ──────────────────────────────────────────────────────────────
 
 def handle_alert(reading):
@@ -107,8 +132,6 @@ def on_connect(client, userdata, flags, rc):
         print(f"[MQTT Subscriber] ✅ Connected to {MQTT_BROKER}")
         print(f"[MQTT Subscriber] 👂 Listening on topic: {MQTT_TOPIC}\n")
         print("-" * 55)
-        # Subscribe to our topic after connecting
-        # QoS 1 = at least once delivery
         client.subscribe(MQTT_TOPIC, qos=1)
     else:
         print(f"[MQTT Subscriber] ❌ Connection failed. Code: {rc}")
@@ -117,29 +140,31 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     """
     Called automatically every time a new message arrives.
-    This is the heart of the subscriber — processes each reading.
+    Thread-safe counter + batched CSV writes.
     """
     global readings_count
 
     try:
-        # Decode JSON payload back to Python dictionary
         payload = msg.payload.decode("utf-8")
         reading = json.loads(payload)
 
-        readings_count += 1
+        # Thread-safe counter increment
+        with _counter_lock:
+            readings_count += 1
+            local_count = readings_count
 
         # Store in memory buffer
         readings_buffer.append(reading)
 
-        # Store in CSV file
-        write_to_csv(reading)
+        # Batched CSV write (flushes every _CSV_FLUSH_INTERVAL msgs)
+        queue_csv_write(reading)
 
         # Display status in terminal
         ts = reading["timestamp"][11:19]
         status = "🚨 ANOMALY" if reading["is_anomaly"] else "✅ OK"
 
         print(
-            f"[{ts}] #{readings_count:04d} | "
+            f"[{ts}] #{local_count:04d} | "
             f"HR: {reading['heart_rate']:5.1f} bpm | "
             f"SpO2: {reading['spo2']:5.1f}% | "
             f"Temp: {reading['temperature']:5.1f}°F | "
@@ -147,7 +172,6 @@ def on_message(client, userdata, msg):
             f"{status}"
         )
 
-        # Trigger alert pipeline if anomaly detected
         if reading["is_anomaly"]:
             handle_alert(reading)
 
@@ -158,14 +182,13 @@ def on_message(client, userdata, msg):
 
 
 def on_disconnect(client, userdata, rc):
-    """Called when subscriber disconnects."""
+    """Flush remaining buffered writes on disconnect."""
+    _flush_csv()
     print(f"\n[MQTT Subscriber] Disconnected. Total received: {readings_count}")
 
 
 # ──────────────────────────────────────────────────────────────
 #  PUBLIC API
-#  Functions used by other modules (e.g. dashboard, DL module)
-#  to access the received data.
 # ──────────────────────────────────────────────────────────────
 
 def get_latest_reading():
@@ -211,23 +234,24 @@ class SensorSubscriber:
 
         try:
             self.client.connect(MQTT_BROKER, MQTT_PORT, keepalive=60)
-            # loop_forever() blocks here and handles all MQTT traffic
-            # It automatically reconnects if connection drops
             self.client.loop_forever()
 
         except KeyboardInterrupt:
-            print(f"\n[MQTT Subscriber] Stopped. {readings_count} readings saved to {CSV_FILE}")
+            _flush_csv()  # Flush any remaining buffered writes
+            print(
+                f"\n[MQTT Subscriber] Stopped. "
+                f"{readings_count} readings saved to {CSV_FILE}"
+            )
             self.client.disconnect()
 
         except Exception as e:
+            _flush_csv()
             print(f"[MQTT Subscriber] ❌ Error: {e}")
             self.client.disconnect()
 
 
 # ──────────────────────────────────────────────────────────────
 #  STANDALONE RUN
-#  Open a NEW terminal and run: python iot/mqtt_subscriber.py
-#  Keep mqtt_publisher.py running in the other terminal.
 # ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

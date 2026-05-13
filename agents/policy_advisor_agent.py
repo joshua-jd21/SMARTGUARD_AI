@@ -44,11 +44,10 @@ sys.path.insert(0, str(ROOT_DIR))
 # ============================================================
 
 from langchain_google_genai import ChatGoogleGenerativeAI
-
-from langchain.prompts import (
+from langchain_core.prompts import (
     ChatPromptTemplate,
-    SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
 )
 
 # ============================================================
@@ -470,6 +469,17 @@ class PolicyAdvisorAgent:
                 raw_text = response.content
 
                 llm_ok = True
+
+                # Log token usage if available
+                usage = getattr(response, "response_metadata", {}).get(
+                    "usage_metadata", {}
+                )
+                if usage:
+                    logger.debug(
+                        f"PolicyAdvisorAgent tokens: "
+                        f"input={usage.get('prompt_token_count', '?')} "
+                        f"output={usage.get('candidates_token_count', '?')}"
+                    )
 
                 logger.debug(
                     f"LLM succeeded on attempt {attempt}"

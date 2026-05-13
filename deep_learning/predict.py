@@ -51,12 +51,17 @@ sys.path.insert(0, str(ROOT_DIR))
 # -------------------------------------------------------------
 
 from config.settings import (
-    SEQUENCE_LENGTH,
-    N_FEATURES,
-    PROCESSED_DATA_DIR,
+    CNN_MODEL_PATH,
+    COVERAGE_RECOMMENDATIONS,
+    LSTM_MODEL_PATH,
     MODEL_DIR,
+    N_FEATURES,
+    PATIENT_AGE,
+    PATIENT_ID,
+    PATIENT_NAME,
+    PROCESSED_DATA_DIR,
     RISK_LABELS,
-    COVERAGE_RECOMMENDATIONS
+    SEQUENCE_LENGTH,
 )
 
 # -------------------------------------------------------------
@@ -142,6 +147,32 @@ def load_assets():
 
         scaler_path = processed_dir / "scaler.pkl"
         threshold_path = model_dir / "lstm_threshold.npy"
+
+        # -----------------------------------------------------
+        # EXISTENCE CHECK — fail fast with clear instructions
+        # -----------------------------------------------------
+
+        missing = []
+        if not Path(LSTM_MODEL_PATH).exists():
+            missing.append(f"  LSTM model   : {LSTM_MODEL_PATH}")
+        if not Path(CNN_MODEL_PATH).exists():
+            missing.append(f"  CNN model    : {CNN_MODEL_PATH}")
+        if not scaler_path.exists():
+            missing.append(f"  Scaler       : {scaler_path}")
+        if not threshold_path.exists():
+            missing.append(f"  Threshold    : {threshold_path}")
+
+        if missing:
+            instructions = (
+                "\n\nMissing inference assets:\n"
+                + "\n".join(missing)
+                + "\n\nTo generate these files, run in order:\n"
+                + "  1. python deep_learning/preprocess.py\n"
+                + "  2. python deep_learning/lstm_model.py\n"
+                + "  3. python deep_learning/cnn_model.py\n"
+            )
+            logger.error(instructions)
+            raise FileNotFoundError(instructions)
 
         # -----------------------------------------------------
         # LOAD MODELS
@@ -491,6 +522,12 @@ def predict_patient_status(
     # ---------------------------------------------------------
 
     result = {
+
+        "patient": {
+            "id": PATIENT_ID,
+            "name": PATIENT_NAME,
+            "age": PATIENT_AGE,
+        },
 
         "risk_prediction": cnn_result,
 

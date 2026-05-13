@@ -33,6 +33,21 @@ from pathlib import Path
 
 from loguru import logger
 
+# ─── Logging configuration ────────────────────────────────────
+# Remove default handler and add structured output:
+#   - Stderr (INFO+): human-readable during development
+#   - File (DEBUG+): full trace with rotation for debugging
+logger.remove()
+logger.add(sys.stderr, level="INFO", colorize=True)
+logger.add(
+    "smartguard.log",
+    level="DEBUG",
+    rotation="10 MB",
+    retention="7 days",
+    enqueue=True,   # thread-safe async writes
+)
+# ──────────────────────────────────────────────────────────────
+
 # =============================================================
 # PROJECT ROOT
 # =============================================================
