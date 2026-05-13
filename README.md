@@ -1,56 +1,144 @@
+---
+title: SmartGuard AI
+emoji: 🩺
+colorFrom: indigo
+colorTo: blue
+sdk: streamlit
+sdk_version: 1.39.0
+app_file: app.py
+pinned: false
+license: mit
+short_description: AI-assisted health risk + insurance intelligence (cloud demo)
+---
+
 # SmartGuard AI
 
-Real-time health risk signals, deep learning (CNN + LSTM), multi-agent LangChain + Gemini analysis, MQTT simulation, and a Streamlit dashboard.
+AI-powered **health risk telemetry and underwriting decision-support** built on a
+hybrid edge + cloud architecture. SmartGuard AI continuously monitors
+physiological signals, runs deep-learning risk classification on the edge, and
+synthesises evidence-backed insurance recommendations using a LangChain
+multi-agent pipeline.
 
-## Prerequisites
+> SmartGuard AI is **decision-support only**. It never auto-approves or
+> auto-rejects insurance claims or policies. All recommendations require a
+> human reviewer.
 
-- macOS **Apple Silicon** (arm64), Python **3.10.x**
+---
 
-**Important:** The interpreter itself must be **arm64**, not x86_64 under Rosetta. Check with:
+## Two deployment surfaces
 
-`python3.10 -c "import platform; print(platform.machine())"` → expect **`arm64`**.
+This repository ships in two complementary forms:
 
-If you see **`x86_64`** on an M-series Mac, your `python3.10` is **Intel-only** (Rosetta). `pip` then skips `tensorflow-macos` and TensorFlow crashes (AVX). **`arch -arm64 python3.10`** does **not** fix that — it fails with *Bad CPU type* because the binary cannot run as arm64.
+| Surface | Where it lives | What it does | Runtime cost |
+|---|---|---|---|
+| **Local edge layer** | `deep_learning/`, `agents/`, `iot/` | Real-time MQTT ingestion, LSTM anomaly detection, CNN risk classification, LangChain agents (Gemini + SerpAPI) | Heavy (TensorFlow, LLM API quota) |
+| **Cloud presentation layer** | `app.py`, `demo/` (this branch) | Lightweight SaaS-style dashboard, monitoring rollups, report visualization | Free-tier compatible |
 
-**Fix:** install Apple Silicon Homebrew Python 3.10, then create the venv with that binary:
+The cloud layer is intentionally decoupled from the heavy compute stack so it
+can run on **Hugging Face Spaces** and **Streamlit Community Cloud** with zero
+secrets and zero runtime API calls. The local edge layer is untouched and
+continues to run the full pipeline as documented below.
+
+---
+
+## Cloud demo — quick deploy
+
+The `cloud-demo` branch is purpose-built for free hosting tiers.
+
+### Hugging Face Spaces
+
+1. Create a new Space → **SDK: Streamlit**.
+2. Push or link this branch as the Space repo.
+3. The YAML front-matter at the top of this README already configures Spaces:
+   - `sdk: streamlit`
+   - `sdk_version: 1.39.0`
+   - `app_file: app.py`
+4. No secrets, no environment variables required — the demo runs end-to-end on
+   the bundled `demo/` assets.
+
+### Streamlit Community Cloud
+
+1. Connect this repository on [streamlit.io/cloud](https://streamlit.io/cloud).
+2. Select branch `cloud-demo`.
+3. Main file path: `app.py`.
+4. Deploy. The app boots in seconds with no external dependencies.
+
+### Local sanity check
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+The cloud `requirements.txt` is the **lightweight set** (Streamlit, pandas,
+numpy, plotly, python-dotenv). The full local stack is preserved in
+`requirements-local.txt`.
+
+---
+
+## What the cloud dashboard renders
+
+`app.py` reads pre-computed snapshots from `demo/`:
+
+- `demo/sample_prediction.json` — multi-patient deep-learning predictions
+  (LOW / MEDIUM / HIGH / CRITICAL) with anomaly scores and vitals snapshots.
+- `demo/sample_report.json` — multi-agent insurance decision-support reports
+  (claim probability, premium adjustment, coverage recommendations, sources).
+- `demo/sample_vitals.csv` — 2-hour telemetry window per patient for live-looking
+  charts.
+
+Tabs available in the cloud dashboard:
+
+1. **Overview** — portfolio risk distribution, fleet snapshot KPIs.
+2. **Live Monitoring** — per-patient telemetry with anomaly markers.
+3. **Insurance Reports** — multi-agent decision-support reports with sources.
+4. **Architecture** — hybrid edge + cloud topology.
+5. **AI Workflow** — three-agent pipeline explanation.
+6. **Deployment** — build metadata + hosting recipes.
+
+The cloud layer:
+
+- Does **not** import TensorFlow, Keras, LangChain, or `paho-mqtt`.
+- Does **not** call Gemini, SerpAPI, or any external service.
+- Does **not** open MQTT loops or background threads.
+- Loads only `streamlit`, `pandas`, `numpy`, `plotly`, `python-dotenv`.
+
+This is the explicit cloud-vs-local execution contract — see *Architecture*
+below.
+
+---
+
+## Local full pipeline — preserved as-is
+
+The full local execution path is unchanged and remains the source of truth.
+For complete local instructions (macOS Apple Silicon, TensorFlow + Gemini +
+SerpAPI + MQTT setup), see [`README-local.md`](#local-setup-detailed) section
+below.
+
+### Local setup (detailed)
+
+**Prerequisites**
+
+- macOS **Apple Silicon** (arm64) or Linux, Python **3.10.x**.
+- Google AI Studio API key (Gemini). Optional: SerpAPI key.
+
+**Important on Apple Silicon:** the interpreter must be **arm64**.
+Check with `python3.10 -c "import platform; print(platform.machine())"` → expect `arm64`.
 
 ```bash
 brew install python@3.10
 bash scripts/bootstrap_macos_arm64_venv.sh
-```
-
-Or manually: `/opt/homebrew/opt/python@3.10/bin/python3.10 -m venv .venv` then `pip install -r requirements.txt`.
-
-- Google AI Studio API key (Gemini)
-- Optional: SerpAPI key (web research; otherwise fallback text is used)
-
-## Environment setup
-
-```bash
-cd SMARTGUARD_AI
-bash scripts/bootstrap_macos_arm64_venv.sh
 source .venv/bin/activate
-```
 
-The script prefers **arm64** Python from `/opt/homebrew` and installs **`requirements.txt`**. If that Python is missing (common before you install Apple Silicon Homebrew), it falls back to **`requirements-agents-ui.txt`** (agents + Streamlit + MQTT, **no TensorFlow**) and creates **`.venv/SMARTGUARD_NO_TF`**. `python check_setup.py` skips the TensorFlow check in that mode.
+# Install the FULL local stack (NOT the cloud-lite requirements.txt):
+pip install -r requirements-local.txt
 
-Installing Homebrew to `/opt/homebrew` needs a normal Terminal run (may prompt for **sudo**): see [brew.sh](https://brew.sh). Automated installs cannot supply your password.
-
-On Linux or Intel Mac, use `python3.10 -m venv .venv` and `pip install -r requirements.txt` as usual.
-
-**TensorFlow on Apple Silicon:** `requirements.txt` installs `tensorflow-macos` and `tensorflow-metal` only on `darwin` + `arm64`. On other platforms it installs standard `tensorflow==2.15.0`.
-
-**Reproducible installs:** after a successful install, refresh the lock with `pip freeze > requirements.lock.txt` and restore the three `#` comment lines at the top (see the committed file). Recreate the same tree with: `pip install -r requirements.lock.txt`.
-
-```bash
 cp .env.example .env
-# Edit .env: set GOOGLE_API_KEY and optionally SERPAPI_API_KEY
+# Edit .env: set GOOGLE_API_KEY (and optionally SERPAPI_API_KEY)
 python check_setup.py
 ```
 
-## Generate deep learning assets (first time)
-
-If `check_setup.py` reports missing models or processed data:
+**Generate deep-learning assets (first time)**
 
 ```bash
 python deep_learning/preprocess.py
@@ -58,59 +146,126 @@ python deep_learning/lstm_model.py
 python deep_learning/cnn_model.py
 ```
 
-## Run order (end-to-end)
+**Run end-to-end**
 
-1. **Optional — MQTT subscriber** (writes CSV under `deep_learning/data/processed/`):
+```bash
+# Optional MQTT subscriber:
+python iot/mqtt_subscriber.py
 
-   ```bash
-   python iot/mqtt_subscriber.py
-   ```
+# Optional MQTT publisher:
+python iot/mqtt_publisher.py
 
-2. **Optional — MQTT publisher** (simulated vitals):
+# Full app:
+python main.py --mode full
+# other modes: --mode dashboard, --mode iot, --mode pipeline, --mode test
+```
 
-   ```bash
-   python iot/mqtt_publisher.py
-   ```
+**Deep-learning inference smoke test**
 
-3. **Full app (subscriber not required):**
+```bash
+python deep_learning/predict.py
+```
 
-   ```bash
-   python main.py --mode full
-   ```
+**Agents only**
 
-   Other modes: `--mode dashboard`, `--mode iot`, `--mode pipeline`, `--mode test`.
+```bash
+python agents/agent_pipeline.py
+```
 
-4. **Deep learning inference smoke test:**
+---
 
-   ```bash
-   python deep_learning/predict.py
-   ```
+## Architecture
 
-5. **Agents only:**
+```
+                          ┌───────────────────────────────────────┐
+                          │            LOCAL EDGE LAYER           │
+                          │  (heavy compute, customer-owned infra)│
+                          │                                       │
+   IoT sensors ─MQTT──►  preprocess → LSTM (anomaly) → CNN (risk) │
+                          │                 │                     │
+                          │                 ▼                     │
+                          │  LangChain agents (RiskReader →       │
+                          │  WebResearcher → PolicyAdvisor)       │
+                          │  Gemini + SerpAPI                     │
+                          └───────────────┬───────────────────────┘
+                                          │ decision-support payload
+                                          ▼
+                          ┌───────────────────────────────────────┐
+                          │          CLOUD PRESENTATION           │
+                          │   (lightweight, free-tier hostable)   │
+                          │                                       │
+                          │   Streamlit dashboard (app.py)        │
+                          │   demo/*.json + demo/*.csv snapshots  │
+                          └───────────────────────────────────────┘
+```
 
-   ```bash
-   python agents/agent_pipeline.py
-   ```
+**Folders**
 
-## Gemini model names
+- `iot/` — sensor simulation + MQTT pipeline (local-only).
+- `deep_learning/` — preprocessing, LSTM autoencoder, CNN classifier, inference (local-only).
+- `agents/` — LangChain multi-agent orchestration (local-only).
+- `dashboard/app.py` — original full-feature Streamlit dashboard that drives the local pipeline.
+- `app.py` — **cloud entrypoint** (this branch) — lightweight, demo-only.
+- `demo/` — static snapshots that power the cloud dashboard.
+- `config/`, `models/`, `data/`, `scripts/` — unchanged.
 
-Default model is `gemini-2.5-flash` (see `config/settings.py`). If you see **429** with `generate_content_free_tier_requests` and **limit: 0** for `gemini-2.0-flash`, that model has no free-tier quota on your project—use a model that appears under [AI Studio rate limits](https://aistudio.google.com/app/rate-limit) for your tier (e.g. `gemini-2.5-flash-lite`). In `.env` set `GEMINI_MODEL` to an id your key supports. Bare `gemini-1.5-flash` often returns **404** on newer API keys; the `models/` prefix is stripped automatically if you paste a full resource name.
+**Why two layers?**
+
+- **Compliance** — PHI stays on the edge; only de-identified decision-support payloads cross the boundary.
+- **Cost** — GPU/inference cost bounded to edge nodes; the cloud layer scales cheaply.
+- **Reliability** — the dashboard stays up even when the edge pipeline is offline.
+- **Hackathon-friendly** — instantly deployable presentation without standing up the full compute stack.
+
+---
+
+## Cloud-vs-local execution contract
+
+| Capability | Local (`main` branch / `requirements-local.txt`) | Cloud (`cloud-demo` branch / `requirements.txt`) |
+|---|---|---|
+| TensorFlow / Keras inference | ✅ live | ❌ never imported |
+| MQTT streaming loop | ✅ live | ❌ never opened |
+| LangChain agent execution | ✅ live | ❌ never invoked |
+| Gemini API calls | ✅ live | ❌ no API key required |
+| SerpAPI calls | ✅ optional | ❌ never invoked |
+| Streamlit dashboard | ✅ `dashboard/app.py` | ✅ `app.py` (this file) |
+| Free-tier deployable | ❌ (requires GPU + secrets) | ✅ HF Spaces / Streamlit Cloud |
+| Startup time | ~seconds–minutes (TF init) | <2s |
+
+---
+
+## Hackathon-readiness checklist
+
+- ✅ Fast cold start (no model loading, no API warmup).
+- ✅ Zero environment variables required for cloud deployment.
+- ✅ Zero external network calls at runtime.
+- ✅ Deterministic, demo-friendly output (no LLM variance).
+- ✅ Original architecture preserved — local pipeline untouched.
+- ✅ Single-command deploy: `streamlit run app.py`.
+
+---
+
+## Gemini model names (local only)
+
+Default model is `gemini-2.5-flash` (see `config/settings.py`). If you hit a
+429 with `generate_content_free_tier_requests` and `limit: 0`, that model has
+no free-tier quota on your project — switch to one listed in
+[AI Studio rate limits](https://aistudio.google.com/app/rate-limit) (e.g.
+`gemini-2.5-flash-lite`). Set `GEMINI_MODEL` in `.env` accordingly.
+
+---
 
 ## Validation checklist
 
 | Step | Command | Expected |
 |------|---------|----------|
-| Setup | `python check_setup.py` | Exit 0; optional warnings for SerpAPI / MQTT |
-| Config | `python config/settings.py` | Prints paths and key status |
-| LangChain | `python -c "from langchain_google_genai import ChatGoogleGenerativeAI; print('ok')"` | Prints `ok` |
-| TensorFlow | `python -c "import tensorflow as tf; print(tf.__version__)"` | Version `2.15.0` (may take a few seconds) |
-| Pipeline | `python main.py --mode test` | Four `SUCCESS` lines with report metrics |
-| Predict | `python deep_learning/predict.py` | Risk / anomaly summary (requires trained assets) |
+| Cloud app | `streamlit run app.py` | Dashboard renders in <2s, no API calls |
+| Cloud deps | `pip install -r requirements.txt` | Installs only Streamlit + pandas + numpy + plotly + dotenv |
+| Local setup | `python check_setup.py` | Exit 0; optional warnings for SerpAPI / MQTT |
+| Local pipeline | `python main.py --mode test` | Four `SUCCESS` lines with report metrics |
+| Local predict | `python deep_learning/predict.py` | Risk / anomaly summary |
 
-## Architecture (short)
+---
 
-- **`config/settings.py`** — paths, API keys, MQTT, Gemini model name.
-- **`deep_learning/`** — preprocess, LSTM autoencoder, CNN classifier, `predict.py` unified inference.
-- **`agents/`** — Risk reader → Web researcher (SerpAPI + Gemini) → Policy advisor; `agent_pipeline.py` orchestrates.
-- **`iot/`** — HiveMQ-compatible publisher/subscriber and sensor simulator.
-- **`dashboard/app.py`** — Streamlit UI calling `SmartGuardPipeline`.
+## License
+
+MIT — see project root.

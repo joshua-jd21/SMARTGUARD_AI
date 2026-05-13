@@ -1,0 +1,24 @@
+{
+  "patient": {
+    "name": "Jordan Lee",
+    "age": 38
+  },
+  "risk_prediction": {
+    "risk_label": "MEDIUM",
+    "risk_class": 1,
+    "confidence": 0.72,
+    "failsafe_triggered": false,
+    "all_probabilities": {
+      "LOW": 0.12,
+      "MEDIUM": 0.72,
+      "HIGH": 0.12,
+      "CRITICAL": 0.04
+    }
+  },
+  "anomaly_detection": {
+    "is_anomaly": false,
+    "anomaly_score": 0.31,
+    "reconstruction_error": 0.0185,
+    "threshold_used": 0.05
+  }
+}

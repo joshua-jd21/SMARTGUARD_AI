@@ -1,54 +1,26 @@
-# SmartGuard AI — pinned stack (Python 3.10)
+# =====================================================================
+# SmartGuard AI — CLOUD DEMO requirements (lightweight)
+# =====================================================================
 #
-# Dependency lock: after `pip install -r requirements.txt`, run `pip freeze > requirements.lock.txt`
-# (see header in requirements.lock.txt). CI and teammates can `pip install -r requirements.lock.txt`.
+# This file is used ONLY by the cloud-demo branch and is optimised for
+# free hosting tiers (Hugging Face Spaces, Streamlit Community Cloud).
 #
-# TensorFlow wheels differ by platform:
-#   - Apple Silicon (arm64) macOS: tensorflow-macos + tensorflow-metal (no plain tensorflow).
-#     Requires an arm64 Python (platform.machine() == "arm64"); x86_64/Rosetta picks the wrong wheel.
-#   - Intel macOS / Linux / Windows: standard tensorflow CPU/GPU wheel.
+# It intentionally DOES NOT include:
+#   - tensorflow / tensorflow-macos / tensorflow-metal / keras
+#   - langchain / langchain-google-genai / google-generativeai
+#   - google-search-results (SerpAPI)
+#   - paho-mqtt (MQTT runtime)
+#   - matplotlib / seaborn / scikit-learn (training-time deps)
 #
-# Install:  python3.10 -m venv .venv && source .venv/bin/activate && pip install -U pip && pip install -r requirements.txt
-# Lock:     pip freeze > requirements.lock.txt
+# Full local stack lives in `requirements-local.txt` (preserved).
+# See README.md for the local-vs-cloud execution contract.
+#
+# Install:  pip install -r requirements.txt
+# Run:      streamlit run app.py
+# =====================================================================
 
-# --- IoT ---
-paho-mqtt==1.6.1
-
-# --- Data / ML numerics (TF 2.15 + sklearn wheels expect NumPy 1.x ABI; avoid NumPy 2.x) ---
-numpy==1.26.4
-pandas==2.2.2
-scikit-learn==1.4.1.post1
-
-# --- Deep learning ---
-tensorflow-macos==2.15.0; sys_platform == "darwin" and platform_machine == "arm64"
-tensorflow-metal==1.1.0; sys_platform == "darwin" and platform_machine == "arm64"
-tensorflow==2.15.0; sys_platform != "darwin" or platform_machine != "arm64"
-matplotlib==3.8.4
-seaborn==0.13.2
-
-# --- LangChain (0.3.14 line: aligned langchain-core + langsmith; pairs with langchain-google-genai 2.0.10) ---
-langchain==0.3.14
-langchain-core==0.3.45
-langchain-community==0.3.14
-langchain-text-splitters==0.3.4
-# 2.0.10: last 2.0.x line without extra google-ai-generativelanguage pin (avoids clash with google-generativeai 0.8.x).
-langchain-google-genai==2.0.10
-langsmith==0.1.147
-pydantic==2.9.2
-pydantic-settings==2.6.1
-
-# --- Google Generative AI (resolved transitively; pin client for reproducible Gemini HTTP stack) ---
-google-generativeai==0.8.3
-
-# --- Web search (SerpAPI client) ---
-google-search-results==2.4.2
-
-# --- Dashboard ---
 streamlit==1.39.0
+pandas==2.2.2
+numpy==1.26.4
 plotly==5.20.0
-
-# --- Utilities ---
 python-dotenv==1.0.1
-requests==2.32.3
-loguru==0.7.2
-joblib==1.4.2

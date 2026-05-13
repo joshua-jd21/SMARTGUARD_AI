@@ -1,0 +1,22 @@
+# SmartGuard AI - Streamlit theme (cloud demo)
+# Renders consistently on Hugging Face Spaces and Streamlit Community Cloud.
+
+[theme]
+base                = "dark"
+primaryColor        = "#3b82f6"
+backgroundColor     = "#0b1220"
+secondaryBackgroundColor = "#0e1525"
+textColor           = "#e5edff"
+font                = "sans serif"
+
+[server]
+headless            = true
+runOnSave           = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats    = false
+
+[client]
+toolbarMode         = "viewer"
+showErrorDetails    = false

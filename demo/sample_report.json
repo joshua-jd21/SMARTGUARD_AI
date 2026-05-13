@@ -1,0 +1,182 @@
+{
+  "generated_at": "2026-05-13T07:42:31Z",
+  "pipeline_version": "smartguard-ai/cloud-demo-1.0.0",
+  "reports": [
+    {
+      "patient_id": "SG-1042",
+      "patient_name": "Rajan Mehta",
+      "patient_age": 58,
+      "risk_label": "CRITICAL",
+      "urgency_level": 5,
+      "cnn_confidence": 0.9874,
+      "anomaly_score": 0.8731,
+      "medical_summary": "Patient presents tachycardia (HR 132), hypoxia (SpO\u2082 89%), hypertensive crisis (168/104), febrile (38.4\u00b0C). CNN classifier returned CRITICAL with 98.7% confidence; LSTM autoencoder flagged reconstruction error 1.8x above learned threshold, indicating sustained physiological deviation.",
+      "research": {
+        "synthesised_finding": "Concurrent hypoxia, hypertensive crisis, and tachycardia in a 58-year-old male is consistent with cardiovascular decompensation and warrants urgent clinical evaluation per ACC/AHA 2024 and WHO acute cardiac care guidance.",
+        "evidence_strength": "STRONG",
+        "key_guidelines": [
+          "ACC/AHA 2024 Hypertensive Crisis Management Pathway",
+          "WHO Acute Cardiac Care Standards 2023",
+          "ESC Guidelines on Cardiovascular Risk Stratification 2024"
+        ],
+        "clinical_actions": [
+          "Trigger 24/7 nurse outreach within 1 hour",
+          "Recommend immediate ER evaluation for hypertensive urgency",
+          "Order ambulatory ECG + echocardiogram within 72 hours",
+          "Initiate medication adherence review and lifestyle counselling"
+        ],
+        "sources_cited": [
+          "American College of Cardiology \u2013 2024 Practice Guideline",
+          "WHO Hypertension Care Bundle 2023",
+          "European Society of Cardiology \u2013 Risk Stratification Update"
+        ]
+      },
+      "insurance": {
+        "claim_probability_pct": 78.4,
+        "premium_adjustment_pct": 22.5,
+        "clinical_referral": true,
+        "agent_finding": "Member's biometric trajectory shows sustained CRITICAL classification across the last 96 hours of telemetry. Recommend tiered intervention: clinical referral, premium adjustment within actuarial corridor, and enrolment in a managed-care wellness pathway.",
+        "immediate_actions": [
+          "Flag policy POL-2024-IN-441902 for case management review",
+          "Schedule clinician call within 24h via telehealth network",
+          "Issue wearable replenishment kit (chest-strap ECG)",
+          "Notify named caregiver via consented channel"
+        ],
+        "coverage_changes": [
+          "Activate cardiac specialist co-pay waiver for 90 days",
+          "Add ambulatory monitoring rider at zero incremental premium",
+          "Pre-authorise emergency transport benefit"
+        ],
+        "wellness_program": "Enrol member in SmartGuard Cardiac+ program: medication adherence, dietary coaching, weekly clinician check-ins, and continuous remote monitoring for 12 weeks.",
+        "policy_rationale": "Adjustment driven by sustained physiological anomaly (LSTM reconstruction error 0.092 vs 0.051 threshold) and CRITICAL CNN classification (conf=0.987). All recommendations remain assistive; final underwriting decision requires human reviewer per regulatory policy."
+      },
+      "report_text": "SmartGuard AI \u2013 Insurance Decision Support Report\nPatient: Rajan Mehta (SG-1042, 58M)\nRisk Label: CRITICAL  |  Urgency: 5/5\nClaim Probability: 78.4%  |  Premium Adjustment: +22.5%\nClinical Referral: YES\n\nFindings: Cardiovascular decompensation pattern detected. Evidence: STRONG.\nAction: Case manager + telehealth + cardiac specialist pathway.\nThis report is decision-support only. Final underwriting requires human reviewer."
+    },
+    {
+      "patient_id": "SG-1077",
+      "patient_name": "Aisha Khan",
+      "patient_age": 42,
+      "risk_label": "HIGH",
+      "urgency_level": 4,
+      "cnn_confidence": 0.8214,
+      "anomaly_score": 0.6418,
+      "medical_summary": "Patient presents elevated HR (118), mild hypoxia (SpO\u2082 93%), stage-2 hypertension (151/96), low-grade fever (37.6\u00b0C). LSTM flags moderate physiological deviation; CNN classifier returned HIGH with 82.1% confidence.",
+      "research": {
+        "synthesised_finding": "Pattern is consistent with early systemic inflammatory response with hypertensive risk \u2014 monitoring escalation recommended per JAMA 2024 ambulatory care guidance.",
+        "evidence_strength": "MODERATE",
+        "key_guidelines": [
+          "JAMA 2024 Ambulatory Hypertension Management",
+          "WHO Sepsis Early Warning Indicators 2023"
+        ],
+        "clinical_actions": [
+          "Increase telemetry sampling rate to 1-minute cadence",
+          "Schedule virtual GP consultation within 48 hours",
+          "Order CBC + CRP panel via partner lab"
+        ],
+        "sources_cited": [
+          "JAMA Internal Medicine \u2013 Ambulatory BP Management 2024",
+          "WHO Sepsis Early Warning Protocol 2023"
+        ]
+      },
+      "insurance": {
+        "claim_probability_pct": 52.1,
+        "premium_adjustment_pct": 11.0,
+        "clinical_referral": true,
+        "agent_finding": "Member shows HIGH-risk profile across the rolling 7-day window. Recommend proactive outreach and graded premium adjustment within Tier-2 corridor.",
+        "immediate_actions": [
+          "Trigger GP virtual consult invitation",
+          "Send hydration + rest advisory via member app",
+          "Tag case for biweekly review"
+        ],
+        "coverage_changes": [
+          "Add 30-day enhanced lab panel benefit",
+          "Activate care navigator support line"
+        ],
+        "wellness_program": "Enrol member in SmartGuard Vital+ program: lifestyle coaching, BP self-tracking kit, weekly clinician check-in.",
+        "policy_rationale": "Risk uplift justified by sustained HIGH classification (conf=0.821) and anomaly score 0.64. Within actuarial guardrails. Final decision requires reviewer sign-off."
+      },
+      "report_text": "SmartGuard AI \u2013 Insurance Decision Support Report\nPatient: Aisha Khan (SG-1077, 42F)\nRisk Label: HIGH  |  Urgency: 4/5\nClaim Probability: 52.1%  |  Premium Adjustment: +11.0%\nClinical Referral: YES\n\nFindings: Early systemic inflammatory response pattern. Evidence: MODERATE.\nAction: Virtual GP + lab panel + care navigator.\nThis report is decision-support only. Final underwriting requires human reviewer."
+    },
+    {
+      "patient_id": "SG-1108",
+      "patient_name": "Jordan Lee",
+      "patient_age": 38,
+      "risk_label": "MEDIUM",
+      "urgency_level": 3,
+      "cnn_confidence": 0.7204,
+      "anomaly_score": 0.3102,
+      "medical_summary": "Patient presents mildly elevated HR (92) and BP (134/86). No anomaly flagged. CNN classifier returned MEDIUM with 72.0% confidence \u2014 borderline lifestyle-risk profile.",
+      "research": {
+        "synthesised_finding": "Pattern consistent with sub-clinical stress + lifestyle-driven cardiovascular drift. Wellness-tier intervention recommended.",
+        "evidence_strength": "MODERATE",
+        "key_guidelines": [
+          "WHO Lifestyle Risk Reduction Framework 2023",
+          "ACSM Physical Activity Guidelines 2024"
+        ],
+        "clinical_actions": [
+          "Send personalised lifestyle improvement plan",
+          "Enable optional wearable step + sleep coaching"
+        ],
+        "sources_cited": [
+          "WHO Lifestyle Risk Framework 2023",
+          "ACSM 2024 Activity Guidelines"
+        ]
+      },
+      "insurance": {
+        "claim_probability_pct": 18.7,
+        "premium_adjustment_pct": 3.0,
+        "clinical_referral": false,
+        "agent_finding": "Member is in a stable MEDIUM band. Recommend wellness-tier engagement; no underwriting change required this cycle.",
+        "immediate_actions": [
+          "Push wellness nudge via app",
+          "Offer optional sleep + activity coaching"
+        ],
+        "coverage_changes": [
+          "No change \u2014 monitor next billing cycle"
+        ],
+        "wellness_program": "Enrol in SmartGuard Wellness Light: nudges, gamified activity goals, monthly insights.",
+        "policy_rationale": "MEDIUM classification within tolerance band. Maintain coverage; revisit at next quarterly review."
+      },
+      "report_text": "SmartGuard AI \u2013 Insurance Decision Support Report\nPatient: Jordan Lee (SG-1108, 38M)\nRisk Label: MEDIUM  |  Urgency: 3/5\nClaim Probability: 18.7%  |  Premium Adjustment: +3.0%\nClinical Referral: NO\n\nFindings: Lifestyle-driven sub-clinical drift. Evidence: MODERATE.\nAction: Wellness nudges + optional coaching.\nThis report is decision-support only."
+    },
+    {
+      "patient_id": "SG-1133",
+      "patient_name": "Priya Subramanian",
+      "patient_age": 31,
+      "risk_label": "LOW",
+      "urgency_level": 1,
+      "cnn_confidence": 0.9412,
+      "anomaly_score": 0.1118,
+      "medical_summary": "All vitals within normative bands. No anomaly. CNN classifier returned LOW with 94.1% confidence.",
+      "research": {
+        "synthesised_finding": "Stable physiological profile. Continue standard preventive care cadence.",
+        "evidence_strength": "STRONG",
+        "key_guidelines": [
+          "WHO Healthy Adults Preventive Framework 2023"
+        ],
+        "clinical_actions": [
+          "Maintain annual preventive check-up cadence"
+        ],
+        "sources_cited": [
+          "WHO Preventive Care Framework 2023"
+        ]
+      },
+      "insurance": {
+        "claim_probability_pct": 4.2,
+        "premium_adjustment_pct": -2.0,
+        "clinical_referral": false,
+        "agent_finding": "Member qualifies for healthy-living discount tier. Recommend retention incentive.",
+        "immediate_actions": [
+          "Apply healthy-living discount on next renewal",
+          "Send wellness streak achievement notification"
+        ],
+        "coverage_changes": [
+          "Eligible for premium reduction \u2014 \u20122.0% on renewal"
+        ],
+        "wellness_program": "Continue passive monitoring; offer optional preventive screening voucher.",
+        "policy_rationale": "Sustained LOW classification justifies retention discount within actuarial corridor."
+      },
+      "report_text": "SmartGuard AI \u2013 Insurance Decision Support Report\nPatient: Priya Subramanian (SG-1133, 31F)\nRisk Label: LOW  |  Urgency: 1/5\nClaim Probability: 4.2%  |  Premium Adjustment: \u20122.0%\nClinical Referral: NO\n\nFindings: Stable healthy profile.\nAction: Retention incentive + preventive voucher.\nThis report is decision-support only."
+    }
+  ]
+}

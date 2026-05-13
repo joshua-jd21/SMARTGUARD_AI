@@ -19,7 +19,9 @@ venv/
 smartguard.log
 
 # Streamlit
-.streamlit/
+# (cloud-demo branch: track .streamlit/config.toml; ignore caches/secrets)
+.streamlit/secrets.toml
+.streamlit/cache/
 
 # IDE
 .vscode/

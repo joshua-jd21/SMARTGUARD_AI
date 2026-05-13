@@ -1,0 +1,151 @@
+{
+  "generated_at": "2026-05-13T07:42:18Z",
+  "pipeline_version": "smartguard-ai/cloud-demo-1.0.0",
+  "model_lineage": {
+    "lstm_anomaly": "lstm_autoencoder_v3.keras",
+    "cnn_classifier": "cnn_risk_classifier_v4.keras",
+    "agents_runtime": "langchain-0.3.14 + gemini-2.5-flash"
+  },
+  "patients": [
+    {
+      "patient": {
+        "patient_id": "SG-1042",
+        "name": "Rajan Mehta",
+        "age": 58,
+        "sex": "M",
+        "policy_id": "POL-2024-IN-441902"
+      },
+      "risk_prediction": {
+        "risk_label": "CRITICAL",
+        "risk_class": 3,
+        "confidence": 0.9874,
+        "failsafe_triggered": false,
+        "all_probabilities": {
+          "LOW": 0.0009,
+          "MEDIUM": 0.0042,
+          "HIGH": 0.0075,
+          "CRITICAL": 0.9874
+        }
+      },
+      "anomaly_detection": {
+        "is_anomaly": true,
+        "anomaly_score": 0.8731,
+        "reconstruction_error": 0.0921,
+        "threshold_used": 0.0512
+      },
+      "vitals_snapshot": {
+        "heart_rate_bpm": 132,
+        "spo2_pct": 89,
+        "systolic_bp": 168,
+        "diastolic_bp": 104,
+        "temperature_c": 38.4,
+        "respiration_rate": 26
+      }
+    },
+    {
+      "patient": {
+        "patient_id": "SG-1077",
+        "name": "Aisha Khan",
+        "age": 42,
+        "sex": "F",
+        "policy_id": "POL-2024-IN-445188"
+      },
+      "risk_prediction": {
+        "risk_label": "HIGH",
+        "risk_class": 2,
+        "confidence": 0.8214,
+        "failsafe_triggered": false,
+        "all_probabilities": {
+          "LOW": 0.0210,
+          "MEDIUM": 0.1102,
+          "HIGH": 0.8214,
+          "CRITICAL": 0.0474
+        }
+      },
+      "anomaly_detection": {
+        "is_anomaly": true,
+        "anomaly_score": 0.6418,
+        "reconstruction_error": 0.0681,
+        "threshold_used": 0.0512
+      },
+      "vitals_snapshot": {
+        "heart_rate_bpm": 118,
+        "spo2_pct": 93,
+        "systolic_bp": 151,
+        "diastolic_bp": 96,
+        "temperature_c": 37.6,
+        "respiration_rate": 22
+      }
+    },
+    {
+      "patient": {
+        "patient_id": "SG-1108",
+        "name": "Jordan Lee",
+        "age": 38,
+        "sex": "M",
+        "policy_id": "POL-2024-IN-447701"
+      },
+      "risk_prediction": {
+        "risk_label": "MEDIUM",
+        "risk_class": 1,
+        "confidence": 0.7204,
+        "failsafe_triggered": false,
+        "all_probabilities": {
+          "LOW": 0.1244,
+          "MEDIUM": 0.7204,
+          "HIGH": 0.1186,
+          "CRITICAL": 0.0366
+        }
+      },
+      "anomaly_detection": {
+        "is_anomaly": false,
+        "anomaly_score": 0.3102,
+        "reconstruction_error": 0.0185,
+        "threshold_used": 0.0512
+      },
+      "vitals_snapshot": {
+        "heart_rate_bpm": 92,
+        "spo2_pct": 96,
+        "systolic_bp": 134,
+        "diastolic_bp": 86,
+        "temperature_c": 37.1,
+        "respiration_rate": 18
+      }
+    },
+    {
+      "patient": {
+        "patient_id": "SG-1133",
+        "name": "Priya Subramanian",
+        "age": 31,
+        "sex": "F",
+        "policy_id": "POL-2024-IN-449018"
+      },
+      "risk_prediction": {
+        "risk_label": "LOW",
+        "risk_class": 0,
+        "confidence": 0.9412,
+        "failsafe_triggered": false,
+        "all_probabilities": {
+          "LOW": 0.9412,
+          "MEDIUM": 0.0481,
+          "HIGH": 0.0085,
+          "CRITICAL": 0.0022
+        }
+      },
+      "anomaly_detection": {
+        "is_anomaly": false,
+        "anomaly_score": 0.1118,
+        "reconstruction_error": 0.0071,
+        "threshold_used": 0.0512
+      },
+      "vitals_snapshot": {
+        "heart_rate_bpm": 74,
+        "spo2_pct": 98,
+        "systolic_bp": 118,
+        "diastolic_bp": 76,
+        "temperature_c": 36.7,
+        "respiration_rate": 15
+      }
+    }
+  ]
+}
